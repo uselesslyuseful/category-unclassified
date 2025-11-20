@@ -1,6 +1,6 @@
 import pygame
 from pygame.locals import *
-from classes import Player, Object
+from classes import Player, Object, Station
 
 pygame.init()
 
@@ -13,11 +13,17 @@ clock = pygame.time.Clock()
 
 player = Player("PlayerSideStillScaled.png", 90, 540, 5)
 background_image = pygame.image.load("background.png").convert()
+objects_one = [Object("A Coffee Mug that Pours Upside-Down", "A coffee mug that defies gravity. Leave it alone for too long and it just might spill over.", "ScaledCoffee.png", 1)]
+analyzer = Station("Analyzer.png", 1100, 400, "analyzer")
 
+objects = pygame.sprite.Group()
+for sprite in objects_one:
+    objects.add(sprite)
 
-all_sprites = pygame.sprite.Group()
-all_sprites.add(player)
+stations = pygame.sprite.Group()
+stations.add(analyzer)
 
+frame = 0
 running = True
 while running:
     for event in pygame.event.get(): 
@@ -29,6 +35,8 @@ while running:
 
     pressed_keys = pygame.key.get_pressed()
     player.update_pos(pressed_keys)
+    for object in objects_one:
+        object.update(frame)
 
     # --- CAMERA LOGIC ---
     camera_x = player.rect.x - SCREEN_WIDTH // 2
@@ -37,11 +45,16 @@ while running:
     # --- DRAW ---
     screen.blit(background_image, (-camera_x, 0))
 
-    # Draw each sprite with camera offset
-    for sprite in all_sprites:
+    for station in stations:
+        screen.blit(station.image, (station.rect.x - camera_x, station.rect.y))
+
+    for sprite in objects:
         screen.blit(sprite.image, (sprite.rect.x - camera_x, sprite.rect.y))
+    
+    screen.blit(player.image, (player.rect.x - camera_x, player.rect.y))
 
     pygame.display.update()
+    frame += 1
     clock.tick(60)
 
 pygame.quit()
