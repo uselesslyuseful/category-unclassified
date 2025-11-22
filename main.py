@@ -23,6 +23,10 @@ for sprite in objects_one:
 stations = pygame.sprite.Group()
 stations.add(analyzer)
 
+decorations = pygame.sprite.Group()
+
+analyzer_rends, analyzer_rects = [], []
+
 frame = 0
 running = True
 while running:
@@ -37,6 +41,12 @@ while running:
     player.update_pos(pressed_keys)
     for object in objects_one:
         object.update(frame)
+        if object.analyze:
+            analyzer_pop_up, analyzer_rends, analyzer_rects = analyzer.analyze_object(object)
+            decorations.add(analyzer_pop_up)
+            object.analyze = False
+            object.analyzed = True
+            
 
     # --- CAMERA LOGIC ---
     camera_x = player.rect.x - SCREEN_WIDTH // 2
@@ -50,6 +60,13 @@ while running:
 
     for sprite in objects:
         screen.blit(sprite.image, (sprite.rect.x - camera_x, sprite.rect.y))
+    
+    for sprite in decorations:
+        screen.blit(sprite.image, (sprite.rect.x - camera_x, sprite.rect.y))
+    
+    if analyzer_rects:
+        for i in range(len(analyzer_rects)):
+            screen.blit(analyzer_rends[i], analyzer_rects[i])
     
     screen.blit(player.image, (player.rect.x - camera_x, player.rect.y))
 
