@@ -12,9 +12,27 @@ screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 clock = pygame.time.Clock()
 
 player = Player("PlayerSideStillScaled.png", 90, 540, 5)
-background_image = pygame.image.load("background.png").convert()
-objects_one = [Object("A Coffee Mug that Pours Upside-Down", "A coffee mug that defies gravity. Leave it alone for too long and it just might spill over.", "ScaledCoffee.png", 3)]
-analyzer = Station("Analyzer.png", 1100, 400, "analyzer")
+background_image = pygame.image.load("working_bg.png").convert()
+objects_one = [
+    Object(
+        "A Coffee Mug that Pours Upside-Down",
+        "A coffee mug that defies gravity...",
+        "ScaledCoffee.png",
+        3,
+        ["synthetic", "gravity-defying"],
+        analysis_data={
+            "material": "Porcelain anomaly",
+            "density": "0.75g/mL",
+            "instability": 100,
+            "temperature": "Lukewarm",
+            "danger_level": "Low"
+        }
+    )
+]
+
+analyzer = Station("Analyzer.png", 900, 700, "analyzer")
+conveyor = Station("conveyor.png", 0, 720, "conveyor")
+conveyor_origin = Station("Conveyor_origin.png", 0, 680, "conveyor_origin")
 
 objects = pygame.sprite.Group()
 for sprite in objects_one:
@@ -22,6 +40,8 @@ for sprite in objects_one:
 
 stations = pygame.sprite.Group()
 stations.add(analyzer)
+stations.add(conveyor)
+
 
 decorations = pygame.sprite.Group()
 
@@ -41,11 +61,10 @@ while running:
     player.update_pos(pressed_keys)
     for object in objects_one:
         object.update(frame)
-        if object.analyze:
+        if object.state == "analysis":
             analyzer_pop_up, analyzer_rends, analyzer_rects = analyzer.analyze_object(object)
             decorations.add(analyzer_pop_up)
-            object.analyze = False
-            object.analyzed = True
+            object.state = "analysis_complete"
             
 
     # --- CAMERA LOGIC ---
@@ -60,6 +79,8 @@ while running:
 
     for sprite in objects:
         screen.blit(sprite.image, (sprite.rect.x - camera_x, sprite.rect.y))
+    
+    screen.blit(conveyor_origin.image, (conveyor_origin.rect.x - camera_x, conveyor_origin.rect.y))
     
     for sprite in decorations:
         sprite.animate(frame)

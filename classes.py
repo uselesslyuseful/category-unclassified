@@ -5,23 +5,26 @@ WORLD_WIDTH = 5200
 SCREEN_HEIGHT = 720
 
 class Object(pygame.sprite.Sprite):
-    def __init__(self, name, desc, image, spd):
+    def __init__(self, name, desc, image, spd, tags, analysis_data, integrity = 100, instability = 0, mass = 1, value = 1):
         super().__init__()
         self.name = name
         self.desc = desc
         self.image = pygame.image.load(image).convert_alpha()
-        self.rect = self.image.get_rect(bottomleft = (200, 550))
-        self.onConveyor = True
+        self.rect = self.image.get_rect(bottomleft = (0, 550))
         self.spd = spd
-        self.analyze = False
-        self.analyzed = False
+        self.state = "onConveyor"
+        self.tags = tags
+        self.instability = instability
+        self.integrity = integrity
+        self.mass = mass
+        self.analysis_data = analysis_data
+        self.value = value
     def update(self, frame):
-        if self.onConveyor:
+        if self.state == "onConveyor":
             if frame % 2 == 0:
                 self.rect.x += self.spd
-        if self.rect.centerx >= 1100 and not self.analyzed:
-            self.onConveyor = False
-            self.analyze = True
+        if self.rect.centerx >= 1100 and not self.state == "analysis_complete":
+            self.state = "analysis"
 
 class Decoration(pygame.sprite.Sprite):
     def __init__(self, image, x_pos, y_pos, spd, lim):
@@ -65,26 +68,31 @@ class Station(pygame.sprite.Sprite):
     def __init__(self, image, x_pos, y_pos, type):
         super().__init__()
         self.image = pygame.image.load(image).convert_alpha()
-        self.rect = self.image.get_rect(center = (x_pos, y_pos))
+        self.rect = self.image.get_rect(bottomleft = (x_pos, y_pos))
         self.type = type
     def analyze_object(self, obj):
-        analyzer_popup = Decoration("Analyzer_Popup.png", self.rect.centerx, self.rect.centery - 450, 2, 50)
-
-        font = pygame.font.Font('freesansbold.ttf', 18)
+        analyzer_popup = Decoration("Analyzer_Popup.png", self.rect.centerx - 15, self.rect.centery - 430, 2, 20)
+        title_font = pygame.font.Font('freesansbold.ttf', 18)
+        font = pygame.font.Font('freesansbold.ttf', 15)
 
         # Wrap BOTH title and description
-        title_lines = Station.render_text_wrapped(obj.name, font, (255,255,255), 400)
+        title_lines = Station.render_text_wrapped(obj.name, title_font, (255,255,255), 400)
         desc_lines  = Station.render_text_wrapped(obj.desc,  font, (255,255,255), 400)
+        analysis_lines = []
+        for key, value in obj.analysis_data.items():
+            line = f"{key.capitalize()}: {value}"
+            analysis_lines.append(line)
+        analysis_rends = [font.render(line, True, (255,255,255)) for line in analysis_lines]
 
-        analyzer_rends = title_lines + desc_lines
+        analyzer_rends = title_lines + desc_lines + analysis_rends
 
         # Build rects with spacing
         analyzer_rects = []
-        base_y = analyzer_popup.rect.centery + 130
+        base_y = analyzer_popup.rect.centery + 100
         for i, rend in enumerate(analyzer_rends):
             rect = rend.get_rect(center=(
                 analyzer_popup.rect.centerx,
-                base_y + i * 30
+                base_y + i * 18
             ))
             analyzer_rects.append(rect)
 
