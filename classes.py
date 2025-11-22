@@ -34,11 +34,13 @@ class Decoration(pygame.sprite.Sprite):
         self.dir = 1
     def animate(self, frame):
         if frame % self.spd == 0:
-            if self.dir == 1:
-                self.rect.y += 1
-            else:
-                self.rect.y -= 1
-            if self.rect.y == self.ogy_pos + self.lim or self.rect.y == self.ogy_pos - self.lim:
+            self.rect.y += self.dir
+            if abs(self.rect.y - self.ogy_pos) >= self.lim:
+                # clamp to limit to avoid overshoot
+                if self.dir == 1:
+                    self.rect.y = self.ogy_pos + self.lim
+                else:
+                    self.rect.y = self.ogy_pos - self.lim
                 self.dir *= -1
 
         
@@ -65,10 +67,48 @@ class Station(pygame.sprite.Sprite):
         self.image = pygame.image.load(image).convert_alpha()
         self.rect = self.image.get_rect(center = (x_pos, y_pos))
         self.type = type
-    def analyze_object(self, object):
-        analyzer_popup = Decoration("Analyzer_Popup.png", self.rect.centerx, self.rect.centery + 50, 2, 20)
-        analyzer_text = [object.name, object.desc]
-        font = pygame.font.Font('freesansbold.ttf', 25)
-        analyzer_rends = [font.render(text, True, (255,255,255)) for text in analyzer_text]
-        analyzer_rects = [rend.get_rect(center = (analyzer_popup.rect.centerx, analyzer_popup.rect.centery)) for rend in analyzer_rends]
+    def analyze_object(self, obj):
+        analyzer_popup = Decoration("Analyzer_Popup.png", self.rect.centerx, self.rect.centery - 450, 2, 50)
+
+        font = pygame.font.Font('freesansbold.ttf', 18)
+
+        # Wrap BOTH title and description
+        title_lines = Station.render_text_wrapped(obj.name, font, (255,255,255), 400)
+        desc_lines  = Station.render_text_wrapped(obj.desc,  font, (255,255,255), 400)
+
+        analyzer_rends = title_lines + desc_lines
+
+        # Build rects with spacing
+        analyzer_rects = []
+        base_y = analyzer_popup.rect.centery + 130
+        for i, rend in enumerate(analyzer_rends):
+            rect = rend.get_rect(center=(
+                analyzer_popup.rect.centerx,
+                base_y + i * 30
+            ))
+            analyzer_rects.append(rect)
+
         return analyzer_popup, analyzer_rends, analyzer_rects
+
+    @staticmethod
+    def render_text_wrapped(text, font, color, max_width):
+        words = text.split(" ")
+        lines = []
+        current_line = ""
+
+        for word in words:
+            test_line = current_line + word + " "
+            test_surface = font.render(test_line, True, color)
+
+            if test_surface.get_width() <= max_width:
+                current_line = test_line
+            else:
+                lines.append(current_line.strip())
+                current_line = word + " "
+
+        if current_line:
+            lines.append(current_line.strip())
+
+        # Turn lines into Surfaces
+        rendered_lines = [font.render(line, True, color) for line in lines]
+        return rendered_lines

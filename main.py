@@ -13,7 +13,7 @@ clock = pygame.time.Clock()
 
 player = Player("PlayerSideStillScaled.png", 90, 540, 5)
 background_image = pygame.image.load("background.png").convert()
-objects_one = [Object("A Coffee Mug that Pours Upside-Down", "A coffee mug that defies gravity. Leave it alone for too long and it just might spill over.", "ScaledCoffee.png", 1)]
+objects_one = [Object("A Coffee Mug that Pours Upside-Down", "A coffee mug that defies gravity. Leave it alone for too long and it just might spill over.", "ScaledCoffee.png", 3)]
 analyzer = Station("Analyzer.png", 1100, 400, "analyzer")
 
 objects = pygame.sprite.Group()
@@ -62,11 +62,15 @@ while running:
         screen.blit(sprite.image, (sprite.rect.x - camera_x, sprite.rect.y))
     
     for sprite in decorations:
+        sprite.animate(frame)
         screen.blit(sprite.image, (sprite.rect.x - camera_x, sprite.rect.y))
     
     if analyzer_rects:
-        for i in range(len(analyzer_rects)):
-            screen.blit(analyzer_rends[i], analyzer_rects[i])
+        for rend, rect in zip(analyzer_rends, analyzer_rects):
+            if frame % analyzer_pop_up.spd == 0:
+                rect.y += analyzer_pop_up.dir
+            screen.blit(rend, (rect.x - camera_x, rect.y))
+
     
     screen.blit(player.image, (player.rect.x - camera_x, player.rect.y))
 
